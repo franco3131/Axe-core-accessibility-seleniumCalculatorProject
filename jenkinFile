@@ -1,27 +1,26 @@
 pipeline{
 	agent any
 	stages{
-		stage("Start Grid"){
+		stage("Compile Stage"){
 			steps{
-				sh "docker-compose up -d hub chrome firefox"
+				withMaven(maven: 'maven_3_5_0'){
+				sh 'mvn clean install'
 			}
 		}
-		stage("Run Test"){
+		stage("Test Stage"){
 			steps{
-				sh "docker-compose up test-module"
-			}
-		}
-		stage("stop Test"){
-			steps{
-				sh "docker-compose down"
+				withMaven(maven: 'maven_3_5_0'){
+				sh 'mvn test'
 			}
 		}
 	}
-	post{
-		always{
-			archiveArtifacts artifacts: 'output/**'
-			sh "docker-compose down"
-			sh "sudo rm -rf output/"
+		stage("Cucumber Reports"){
+			steps{
+				cucumber buildStatus: "UNSTABLE",
+				fileIncludePattern: "**/cucumber.json",
+				jsonReportDirectory: 'target'
+			}
 		}
 	}
+
 }
