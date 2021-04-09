@@ -10,7 +10,10 @@ import io.cucumber.testng.AbstractTestNGCucumberTests;
 @CucumberOptions(
          features={"src/test/resources/Features/Calculator.feature"},
          glue={"com.automationCalculator"},
-         strict=true
+         strict=true,
+         name = {"json:target/cucumber.json"}
+         
+         
   )
 
   public class Runner {
