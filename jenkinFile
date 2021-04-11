@@ -1,17 +1,34 @@
 pipeline{
 	
     agent any
+    
+        tools {
+        maven "Maven"
+    }
+
+    triggers {
+        pollSCM "* * * * *"
+    }
+    
+    options {
+        timestamps()
+        ansiColor("xterm")
+    }
+
+    parameters {
+        booleanParam(name: "RELEASE",
+                description: "Build a release from current commit.",
+                defaultValue: false)
+    }
 
     stages {
 
         stage ('Compile Stage') {
 
             steps {
-
-                withMaven(maven: 'apache-maven-3.6.1') {
-                    sh 'mvn clean install'
-
-                }
+                sh 'mvn clean install'
+	
+	 
 
             }
         }
@@ -19,10 +36,9 @@ pipeline{
 
             steps {
 
-                withMaven(maven: 'apache-maven-3.6.1') {
                     sh 'mvn test'
 
-                }
+                
 
             }
         }
