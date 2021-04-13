@@ -11,8 +11,10 @@ public class Setup {
 	public static WebDriver driver;
 	@Before
 	public void setup() {
+	 if(System.getProperty("os.name").toLowerCase().contains("mac")) {
 	  System.setProperty("webdriver.chrome.driver", "/Users/davidfranco/eclipse-workspace/mavenProject2/calculatorProject/WebDrivers/chromedriver 3");
-      driver = new ChromeDriver();
+	 }
+	  driver = new ChromeDriver();
 	  DesiredCapabilities cap = DesiredCapabilities.chrome();
       cap.setCapability("applicationCacheEnabled", false);
 	  driver.manage().window().maximize();
