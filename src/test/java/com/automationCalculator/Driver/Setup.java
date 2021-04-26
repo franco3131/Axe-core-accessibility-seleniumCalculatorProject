@@ -15,7 +15,7 @@ public class Setup {
 	  System.setProperty("webdriver.chrome.driver", "/Users/davidfranco/eclipse-workspace/mavenProject2/calculatorProject/WebDrivers/chromedriver 3");
 	 }
 	 else {
-		  System.setProperty("webdriver.chrome.driver", "/Users/davidfranco/eclipse-workspace/mavenProject2/calculatorProject/WebDrivers/chromedriver");
+		  System.setProperty("webdriver.chrome.driver", "/usr/local/bin/chromedriver");
 
 	 }
 	  driver = new ChromeDriver();
