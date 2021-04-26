@@ -7,6 +7,25 @@ pipeline {
     			echo 'Hello world'
     		}
     	}
+    	        stage ('Compile Stage') {
+
+            steps {
+                sh 'mvn clean install'
+	
+	 
+
+            }
+        }
+    stage ('Test Stage') {
+
+            steps {
+
+                    sh 'mvn test'
+
+                
+
+            }
+        }
     
      }
    }
