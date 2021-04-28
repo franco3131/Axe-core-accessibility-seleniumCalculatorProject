@@ -20,9 +20,7 @@ public class Setup {
 	  driver = new ChromeDriver();
 	 }
 	 else {
-
-	  System.setProperty("webdriver.chrome.driver", "/Users/davidfranco/eclipse-workspace/mavenProject2/calculatorProject/WebDrivers/chromedriver");
-	
+	  System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
 	  ChromeOptions options = new ChromeOptions();
 	  options.addArguments("--headless");
 	  driver = new ChromeDriver(options);
