@@ -1,6 +1,7 @@
 Feature: Multiplication
 
-	@component-Multiplication  @priority-high
+
+  @component-Multiplication  @priority-high
   Scenario Outline: Multiply two numbers
    Given I go to the calculator page
    And The calculator page is displayed
