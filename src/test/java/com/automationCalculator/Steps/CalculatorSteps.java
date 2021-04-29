@@ -17,55 +17,54 @@ public class CalculatorSteps {
 
 	}
 
-
 	@And("The calculator page is displayed")
 	public void theCalculatorPageIsDisplayed() throws Exception{
 		calculator.isCalculatorPageDisplayed();
 		//assertEquals(calculator.isCalculatorPageDisplayed(),true);
 	}
+	
 	@And("I click on button {int}")
 	public void iClickOnButton(int button) throws Exception{
-		calculator.clickButton(button);
+		calculator.clickNumberButton(button);
 	}
+	
 	@And("I click on the equal button")
 	public void iClickOnTheEqualButton() throws Exception{
 		calculator.clickEquals();
 	}
+	
 	@And("I click on the plus button")
 	public void iClickOnThePlusButton() throws Exception{
 		calculator.clickPlus();
 	}
+	
 	@And("I click on the subtract button")
 	public void iClickOnTheSubtractButton() throws Exception{
 		calculator.clickSubtract();
 	}
+	
 	@And("I click on the multiply button")
 	public void iClickOnTheMultiplyButton() throws Exception{
 		calculator.clickMultiply();
 	}
+	
 	@And("I click on the division button")
 	public void iClickOnTheDivisionButton() throws Exception{
 		calculator.clickDivide();
 	}
+	
 	@Then("The calculator outputs {int}")
 	public void theCalculatorOutput(int output) throws Exception{
 		
 		int outputInteger=Integer.valueOf(calculator.output());
 		assertEquals(outputInteger,output);
 	}
+	
 	@Then("The calculator outputs the decimal {double}")
 	public void theCalculatorOutput(double output) throws Exception{
 		double outputInteger=Double.valueOf(calculator.output());
 		assertEquals(outputInteger,output,0.0);
 	}
 	
-    @Given("a step from {string} in {string} feature file")
-    public void step(String scenario, String file) throws InterruptedException {
 
-        System.out.format("Thread ID – %2d – %s from %s feature file.\n",
-
-        Thread.currentThread().getId(), scenario,file);
-
-        Thread.sleep(3000);
-    }
 }
