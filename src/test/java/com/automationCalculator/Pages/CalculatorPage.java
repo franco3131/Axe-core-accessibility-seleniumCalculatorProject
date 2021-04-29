@@ -30,11 +30,15 @@ public class CalculatorPage extends BasePage {
 		// TODO Auto-generated constructor stub
 	}
 	
+	/**
+	 * @author franco
+	 * return true of false whether calculator page is displayed
+	 * @return
+	 */
+	
 	public boolean isCalculatorPageDisplayed() {
 		try {
-			System.out.println(outputBox.toString());
 			waitVisibility(outputBox);
-			
 			return this.outputBox.isDisplayed();
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -43,13 +47,22 @@ public class CalculatorPage extends BasePage {
 	}
 	
 	
-
+	/**
+	 * @author franco
+	 * This returns the output of calculator
+	 * @return
+	 */
+	
 	public String output() throws Exception{
 		waitVisibility(this.outputBox);
 		return this.outputBox.getText();
 	}
 	
-	
+	/**
+	 * @author franco
+	 * click on plus button
+	 * @return
+	 */
 	
 	public void clickPlus() throws Exception{
 		waitVisibility(this.plus);
@@ -57,29 +70,60 @@ public class CalculatorPage extends BasePage {
 		
 	}
 	
+	/**
+	 * @author franco
+	 * click on subtract button
+	 * @return
+	 */
+	
 	public void clickSubtract() throws Exception{
 		waitVisibility(this.subtract);
 		this.subtract.click();	
 		
 	}
 	
+	/**
+	 * @author franco
+	 * click on multiply button
+	 * @return
+	 */
+	
 	public void clickMultiply() throws Exception{
 		waitVisibility(this.multiply);
 		this.multiply.click();	
 		
 	}
+	
+	/**
+	 * @author franco
+	 * click on divide button
+	 * @return
+	 */
+	
 	public void clickDivide() throws Exception{
 		waitVisibility(this.divide);
 		this.divide.click();	
 		
 	}
 	
+	/**
+	 * @author franco
+	 * click on equal button
+	 * @return
+	 */
+	
 	public void clickEquals() throws Exception{
 		waitVisibility(this.equal);
 		this.equal.click();
 	}
 	
-	public void clickButton(int number) throws Exception{
+	/**
+	 * @author franco
+	 * click on any number button
+	 * @return
+	 */
+	
+	public void clickNumberButton(int number) throws Exception{
 		WebElement button=driver.findElement(By.xpath("//button[contains(text(),'"+number+"')]"));
 		waitVisibility(button);
 		button.click();	
