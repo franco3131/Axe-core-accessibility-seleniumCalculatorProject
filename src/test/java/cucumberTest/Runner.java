@@ -8,7 +8,7 @@ import io.cucumber.testng.AbstractTestNGCucumberTests;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-         features={"src/test/resources/Features/Calculator.feature"},
+         features={"src/test/resources/Features"},
          glue={"com.automationCalculator"},
          plugin = {"json:target/cucumber.json"},
 
