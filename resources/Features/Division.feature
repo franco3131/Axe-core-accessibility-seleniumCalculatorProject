@@ -1,6 +1,6 @@
 Feature: Division
 
- 	@component-Division  @priority-high
+  @component-Division  @priority-high
   Scenario Outline: Divide two numbers
    Given I go to the calculator page
    And The calculator page is displayed
