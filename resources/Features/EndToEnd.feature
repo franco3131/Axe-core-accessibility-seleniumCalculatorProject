@@ -1,6 +1,6 @@
 Feature: End to End
 
-	@component-EndToEnd  @priority-medium
+  @component-EndToEnd  @priority-medium
   Scenario: Multiple operations 
    Given I go to the calculator page
    And The calculator page is displayed
