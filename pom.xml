@@ -52,6 +52,8 @@
 			         <configuration>
 			          <source>1.7</source>
 			          <target>1.7</target>
+			          <fork>true</fork>
+					<executable>/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.261-2.6.22.2.amzn2.0.1.x86_64</executable>
 					 </configuration>
 				</plugin>
 				      <plugin>
