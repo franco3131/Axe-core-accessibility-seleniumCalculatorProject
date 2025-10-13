@@ -16,13 +16,11 @@ public class BasePage {
         this.driver = Setup.driver;
     }
 
-    // Wait until element is visible
     public void waitVisibility(WebElement element) {
         new WebDriverWait(driver, DEFAULT_TIMEOUT)
                 .until(ExpectedConditions.visibilityOf(element));
     }
 
-    // Common extras (optional)
     public void waitClickable(WebElement element) {
         new WebDriverWait(driver, DEFAULT_TIMEOUT)
                 .until(ExpectedConditions.elementToBeClickable(element));
