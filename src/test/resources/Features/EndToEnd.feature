@@ -15,3 +15,4 @@ Feature: End to End
    And I click on button 4
    When I click on the equal button
    Then The calculator outputs the decimal -1.5
+   Then the page has no WCAG AA accessibility violations
