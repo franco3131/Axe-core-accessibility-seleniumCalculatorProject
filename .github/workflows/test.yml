@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tags: ['@component-Division', '@component-Division']   # ← add more tags here
+        tags: ['@component-Division', '@component-Addition','@component-EndToEnd',' @component-Subtraction','@component-Multiplication']   # ← add more tags here
     steps:
       - uses: actions/checkout@v4
 
