@@ -1,22 +1,14 @@
+
 package cucumberTest;
 
-import org.junit.runner.RunWith;
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
 import io.cucumber.testng.AbstractTestNGCucumberTests;
+import io.cucumber.testng.CucumberOptions;
 
-
-@RunWith(Cucumber.class)
 @CucumberOptions(
-         features={"src/test/resources/Features"},
-         glue={"com.automationCalculator"},
-         plugin = {"json:target/cucumber.json"},
+  features = "src/test/resources/Features",
+  glue = {"com.automationCalculator"},
+  plugin = {"pretty","json:target/cucumber.json"},
+  monochrome = true
+)
+public class Runner extends AbstractTestNGCucumberTests {}
 
-         strict=true
-         
-         
-  )
-
-  public class Runner {
- 
-}
