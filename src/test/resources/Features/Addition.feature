@@ -8,11 +8,12 @@ Feature: Addition
    And I click on the plus button
    And I click on button <number2>
    When I click on the equal button
-   Then The calculator outputs <outputValue>
+   And The calculator outputs <outputValue>
 	 Examples:
 		 | number1 | number2 | outputValue | 
 		 |1			   |2        |3            |
 		 |0			   |2        |2            |
 		 |0			   |0        |0            |
 		 |9		     |1        |10           |
+	Then the page has no WCAG AA accessibility violations
 		 
