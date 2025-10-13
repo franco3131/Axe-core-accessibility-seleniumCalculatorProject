@@ -1,6 +1,6 @@
-package com.automationcalculator.Steps;
+package com.automationCalculator.Steps;
 
-import com.automationcalculator.Pages.CalculatorPage;
+import com.automationCalculator.Pages.CalculatorPage;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
