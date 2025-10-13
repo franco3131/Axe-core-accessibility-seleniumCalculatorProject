@@ -10,12 +10,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tags: ['@component-Division', '@component-Addition','@component-EndToEnd',' @component-Subtraction','@component-Multiplication']   # ← add more tags here
+        tags: ['@component-Division', '@component-Addition', '@component-EndToEnd', '@component-Subtraction', '@component-Multiplication']
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-      - uses: actions/setup-java@v4
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
@@ -24,6 +24,6 @@ jobs:
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
-        run: |
-          mvn -q -DskipTests=false \
-            test -Dcucumber.filter.tags="${{ matrix.tags }}"
+        run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
+        # If you must run a specific runner class, use:
+        # run: mvn -q test -Dtest=cucumberTest.Runner -Dcucumber.filter.tags="${{ matrix.tags }}"
