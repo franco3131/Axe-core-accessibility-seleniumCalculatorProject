@@ -33,7 +33,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * return true of false whether calculator page is displayed
-	 * @return
 	 */
 	
 	public boolean isCalculatorPageDisplayed() {
@@ -50,7 +49,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * This returns the output of calculator
-	 * @return
 	 */
 	
 	public String output() throws Exception{
@@ -61,7 +59,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on plus button
-	 * @return
 	 */
 	
 	public void clickPlus() throws Exception{
@@ -73,7 +70,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on subtract button
-	 * @return
 	 */
 	
 	public void clickSubtract() throws Exception{
@@ -85,7 +81,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on multiply button
-	 * @return
 	 */
 	
 	public void clickMultiply() throws Exception{
@@ -97,7 +92,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on divide button
-	 * @return
 	 */
 	
 	public void clickDivide() throws Exception{
@@ -109,7 +103,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on equal button
-	 * @return
 	 */
 	
 	public void clickEquals() throws Exception{
@@ -120,7 +113,6 @@ public class CalculatorPage extends BasePage {
 	/**
 	 * @author franco
 	 * click on any number button
-	 * @return
 	 */
 	
 	public void clickNumberButton(int number) throws Exception{
