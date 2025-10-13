@@ -11,23 +11,32 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 
+import io.github.bonigarcia.wdm.WebDriverManager;
+
 public class Setup {
-	public static WebDriver driver;
-	@Before
-	public void setup() {
-	 if(System.getProperty("os.name").toLowerCase().contains("mac")) {
-	  System.setProperty("webdriver.chrome.driver", "/Users/davidfranco/eclipse-workspace/mavenProject2/calculatorProject/WebDrivers/chromedriver 3");
-	  driver = new ChromeDriver();
-	 }
-	 else {
-	  System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
-	  ChromeOptions options = new ChromeOptions();
-	  options.addArguments("--headless");
-	  driver = new ChromeDriver(options);
-	}
-	}
-	@After
-	public void tearDown() {
-		  driver.quit();
-	}
+ public static WebDriver driver;
+
+    @Before
+    public void setup() {
+        // Let WebDriverManager fetch the right driver (no hard-coded paths)
+        WebDriverManager.chromedriver().setup();
+
+        ChromeOptions options = new ChromeOptions();
+        // Always safe in CI; fine locally too
+        options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
+
+        // Optional: tweak for CI only
+        if ("true".equalsIgnoreCase(System.getenv("CI"))) {
+            options.addArguments("--window-size=1920,1080");
+        }
+
+        driver = new ChromeDriver(options);
+    }
+
+    @After
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
 }
