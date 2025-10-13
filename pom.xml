@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -8,15 +9,21 @@
   <version>0.0.1-SNAPSHOT</version>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
 
+    <!-- Lib versions -->
     <selenium.version>4.25.0</selenium.version>
     <cucumber.version>7.15.0</cucumber.version>
     <testng.version>7.10.2</testng.version>
-    <surefire.version>3.2.5</surefire.version>
     <webdrivermanager.version>5.9.2</webdrivermanager.version>
+    <axe.version>4.8.2</axe.version>
+
+    <!-- Logging (single SLF4J binding) -->
+    <slf4j.version>2.0.13</slf4j.version>
+    <logback.version>1.5.6</logback.version>
+
+    <surefire.version>3.2.5</surefire.version>
   </properties>
 
   <dependencies>
@@ -26,8 +33,21 @@
       <artifactId>selenium-java</artifactId>
       <version>${selenium.version}</version>
     </dependency>
+    <!-- Transport module for Selenium 4.x (avoids transport init issues) -->
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-http</artifactId>
+      <version>${selenium.version}</version>
+    </dependency>
 
-    <!-- Cucumber + TestNG (pick ONE runner; we use TestNG) -->
+    <!-- WebDriverManager: no hard-coded driver paths -->
+    <dependency>
+      <groupId>io.github.bonigarcia</groupId>
+      <artifactId>webdrivermanager</artifactId>
+      <version>${webdrivermanager.version}</version>
+    </dependency>
+
+    <!-- Cucumber + TestNG (pick TestNG runner; remove cucumber-junit) -->
     <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
@@ -47,32 +67,48 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- WebDriverManager (no hard-coded paths) -->
+    <!-- axe-core for accessibility checks -->
     <dependency>
-      <groupId>io.github.bonigarcia</groupId>
-      <artifactId>webdrivermanager</artifactId>
-      <version>${webdrivermanager.version}</version>
+      <groupId>com.deque.html.axe-core</groupId>
+      <artifactId>selenium</artifactId>
+      <version>${axe.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Logging: SLF4J API + one binding (Logback) -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <!-- Java 17 -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
-          <release>17</release>
+          <release>${maven.compiler.release}</release>
         </configuration>
       </plugin>
 
-      <!-- Surefire will detect TestNG; include your Cucumber runner class -->
+      <!-- Run Cucumber/TestNG; include your runner class pattern -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
         <configuration>
           <includes>
+            <!-- adjust if your runner name/package differs -->
             <include>**/Runner.java</include>
             <include>**/*Test.java</include>
           </includes>
@@ -83,10 +119,12 @@
               <value>testng</value>
             </property>
           </properties>
-          <!-- Pass CI flag to your code if you like -->
-          <!-- <systemPropertyVariables>
+          <!-- Optional: pass headless hint to your code -->
+          <!--
+          <systemPropertyVariables>
             <CI>true</CI>
-          </systemPropertyVariables> -->
+          </systemPropertyVariables>
+          -->
         </configuration>
       </plugin>
     </plugins>
