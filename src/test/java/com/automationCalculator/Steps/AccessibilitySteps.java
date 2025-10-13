@@ -1,6 +1,6 @@
 package com.automationCalculator.Steps;
 
-import com.automationcalculator.accessibility.AxeChecks;
+import com.automationCalculator.accessibility.AxeChecks;
 import io.cucumber.java.en.Then;
 import org.openqa.selenium.WebDriver;
 
