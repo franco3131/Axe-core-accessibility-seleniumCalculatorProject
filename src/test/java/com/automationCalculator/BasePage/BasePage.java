@@ -1,29 +1,34 @@
 package com.automationCalculator.BasePage;
+
 import com.automationCalculator.Driver.Setup;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 
 public class BasePage {
-	public WebDriver driver;
-	public BasePage(){
-		this.driver=Setup.driver;
-		
-	}
-	
-	//Wait Wrapper Method
-    public void waitVisibility(WebElement element) {
-    	System.out.println(element);
-    	WebDriverWait wait = new WebDriverWait(driver, 30);
-        wait.until(ExpectedConditions.visibilityOf(element));
-    }
-    
-    public void goToUrl(String url) throws Exception{
-    	  driver.get(url);
-    }
- 
-  
+    protected final WebDriver driver;
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
 
+    public BasePage() {
+        this.driver = Setup.driver;
+    }
+
+    // Wait until element is visible
+    public void waitVisibility(WebElement element) {
+        new WebDriverWait(driver, DEFAULT_TIMEOUT)
+                .until(ExpectedConditions.visibilityOf(element));
+    }
+
+    // Common extras (optional)
+    public void waitClickable(WebElement element) {
+        new WebDriverWait(driver, DEFAULT_TIMEOUT)
+                .until(ExpectedConditions.elementToBeClickable(element));
+    }
+
+    public void goToUrl(String url) {
+        driver.get(url);
+    }
 }
