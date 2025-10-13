@@ -1,20 +1,29 @@
-name: ci
-on: [push, pull_request]
+name: cucumber-tags
+
+on:
+  push:
+  pull_request:
 
 jobs:
-  build:
+  run-by-tag:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tags: ['@addition', '@subtraction']   # ← add more tags here
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - name: Set up JDK 17
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
           cache: maven
 
-      - name: Build & test (headless)
+      - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
-        run: mvn -q -e -DskipTests=false test
+        run: |
+          mvn -q -DskipTests=false \
+            test -Dcucumber.filter.tags="${{ matrix.tags }}"
