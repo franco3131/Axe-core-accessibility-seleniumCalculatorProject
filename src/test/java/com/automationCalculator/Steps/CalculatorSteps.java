@@ -1,4 +1,4 @@
-package com.automationcalculator.steps;
+package com.automationcalculator.Steps;
 
 import com.automationcalculator.Pages.CalculatorPage;
 import io.cucumber.java.en.And;
