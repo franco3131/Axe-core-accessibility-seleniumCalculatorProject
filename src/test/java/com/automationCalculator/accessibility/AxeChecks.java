@@ -1,5 +1,5 @@
 // src/test/java/com/automationcalculator/accessibility/AxeChecks.java
-package com.automationcalculator.accessibility;
+package com.automationCalculator.accessibility;
 
 import com.deque.html.axecore.selenium.AxeBuilder;
 import com.deque.html.axecore.results.Results;
