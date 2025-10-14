@@ -2,7 +2,7 @@ Feature: End to End
 
   @component-EndToEnd  @priority-medium
   Scenario: Multiple operations 
-   Given I go to the calculator page
+   Given I go to the calculator page and check accessibility
    And The calculator page is displayed
    And I click on button 2
    And I click on the subtract button
