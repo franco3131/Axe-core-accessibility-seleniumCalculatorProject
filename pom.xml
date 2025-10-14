@@ -18,10 +18,10 @@
     <testng.version>7.10.2</testng.version>
     <webdrivermanager.version>5.9.2</webdrivermanager.version>
     <axe.version>4.8.2</axe.version>
+    <jackson.version>2.17.2</jackson.version>
 
-    <!-- Logging (single SLF4J binding) -->
+    <!-- Logging (single binding, NO logback) -->
     <slf4j.version>2.0.13</slf4j.version>
-    <logback.version>1.5.6</logback.version>
 
     <surefire.version>3.2.5</surefire.version>
   </properties>
@@ -33,18 +33,13 @@
       <artifactId>selenium-java</artifactId>
       <version>${selenium.version}</version>
     </dependency>
-    <!-- Transport module for Selenium 4.x (avoids transport init issues) -->
+    <!-- Transport module for Selenium 4.x -->
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-http</artifactId>
       <version>${selenium.version}</version>
     </dependency>
-<dependency>
-  <groupId>com.fasterxml.jackson.core</groupId>
-  <artifactId>jackson-databind</artifactId>
-  <version>2.17.2</version>
-  <scope>test</scope>
-</dependency>
+
     <!-- WebDriverManager: no hard-coded driver paths -->
     <dependency>
       <groupId>io.github.bonigarcia</groupId>
@@ -52,7 +47,7 @@
       <version>${webdrivermanager.version}</version>
     </dependency>
 
-    <!-- Cucumber + TestNG (pick TestNG runner; remove cucumber-junit) -->
+    <!-- Cucumber + TestNG -->
     <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
@@ -80,16 +75,24 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Logging: SLF4J API + one binding (Logback) -->
+    <!-- Jackson for JSON (reporting helper) -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Logging: SLF4J API + simple binding (NO logback) -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -114,7 +117,7 @@
         <configuration>
           <includes>
             <!-- adjust if your runner name/package differs -->
-            <include>**/Runner.java</include>
+            <include>**/*Runner.java</include>
             <include>**/*Test.java</include>
           </includes>
           <useModulePath>false</useModulePath>
@@ -124,18 +127,13 @@
               <value>testng</value>
             </property>
           </properties>
-                     <argLine>
-      -Dorg.slf4j.simpleLogger.defaultLogLevel=info
-      -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http=warn
-      -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http.wire=off
-      -Dorg.slf4j.simpleLogger.log.com.epam.healenium=debug   <!-- keep heal logs if you want -->
-    </argLine>
-          <!-- Optional: pass headless hint to your code -->
-          <!--
-          <systemPropertyVariables>
-            <CI>true</CI>
-          </systemPropertyVariables>
-          -->
+          <!-- Quiet the Apache HttpClient wire logs; keep console clean -->
+          <argLine>
+            -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+            -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http=warn
+            -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http.wire=off
+            -Dorg.slf4j.simpleLogger.showDateTime=true
+          </argLine>
         </configuration>
       </plugin>
     </plugins>
