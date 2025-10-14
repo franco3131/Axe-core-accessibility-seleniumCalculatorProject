@@ -15,4 +15,12 @@ Feature: Subtraction
 		 |5			   |6        |-1.0           |
 		 |9			   |5        |4.0            |
 
+	  Scenario Outline: Subtract two numbers and check accessibility
+   Given I go to the calculator page
+   And The calculator page is displayed
+   And I click on button 5
+   And I click on the subtract button
+   And I click on button 5
+   When I click on the equal button
+   And The calculator outputs the decimal 0
 	Then the page has no WCAG AA accessibility violations
