@@ -25,6 +25,9 @@ jobs:
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
+          ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
+          ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
+
         # If you must run a specific runner class, use:
         # run: mvn -q test -Dtest=cucumberTest.Runner -Dcucumber.filter.tags="${{ matrix.tags }}"
