@@ -15,7 +15,6 @@ Feature: Division
 		 |0			   |3        |0.0            |
 		 |4			   |2        |2.0            |
 		 |9		     |9        |1.0            |
-	Then the page has no WCAG AA accessibility violations
 
 	  @component-Division  @priority-high @accessibility
   Scenario Outline: Divide two numbers and check accessibility
