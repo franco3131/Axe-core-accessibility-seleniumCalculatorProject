@@ -1,0 +1,19 @@
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Quiet by default -->
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+
+  <!-- Keep Healenium details if you like -->
+  <logger name="com.epam.healenium" level="DEBUG"/>
+
+  <!-- Silence Apache HttpClient noise -->
+  <logger name="org.apache.hc.client5.http" level="WARN"/>
+  <logger name="org.apache.hc.client5.http.wire" level="OFF"/>
+</configuration>
