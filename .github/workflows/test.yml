@@ -31,3 +31,18 @@ jobs:
 
         # If you must run a specific runner class, use:
         # run: mvn -q test -Dtest=cucumberTest.Runner -Dcucumber.filter.tags="${{ matrix.tags }}"
+
+      - name: Upload axe HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-report
+          path: target/axe/index.html
+          if-no-files-found: warn
+    
+      - name: Accessibility summary
+        if: always()
+        run: |
+          echo "## Accessibility Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Report: target/axe/index.html (uploaded as artifact)" >> $GITHUB_STEP_SUMMARY
+          echo "- JSON count: $(ls -1 target/axe/*.json 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
