@@ -124,6 +124,12 @@
               <value>testng</value>
             </property>
           </properties>
+                     <argLine>
+      -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+      -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http=warn
+      -Dorg.slf4j.simpleLogger.log.org.apache.hc.client5.http.wire=off
+      -Dorg.slf4j.simpleLogger.log.com.epam.healenium=debug   <!-- keep heal logs if you want -->
+    </argLine>
           <!-- Optional: pass headless hint to your code -->
           <!--
           <systemPropertyVariables>
