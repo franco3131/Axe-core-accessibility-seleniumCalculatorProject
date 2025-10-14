@@ -15,5 +15,16 @@ Feature: Addition
 		 |0			   |2        |2            |
 		 |0			   |0        |0            |
 		 |9		     |1        |10           |
-	Then the page has no WCAG AA accessibility violations
+
+
+    @component-Addition @priority-high @accessibility
+  Scenario: Add two numbers and check accessibility
+   Given I go to the calculator page
+   And The calculator page is displayed
+   And I click on button 1
+   And I click on the plus button
+   And I click on button 2
+   When I click on the equal button
+   And The calculator outputs 3
+   Then the page has no WCAG AA accessibility violations
 		 
