@@ -30,67 +30,64 @@ public class AxeHtmlReporter {
         body.append("<h1>Axe Accessibility Report</h1>");
         body.append("<p>Generated: ").append(LocalDateTime.now()).append("</p>");
 
+        Map<String,Integer> impactCounts = new LinkedHashMap<>();
+        List<String> detailsSections = new ArrayList<>();
+
         if (files.isEmpty()) {
             body.append("<p><em>No axe JSON files found in ")
                 .append(escape(dir.toAbsolutePath().toString()))
                 .append("</em></p>");
         } else {
             body.append("<table><thead><tr><th>Page</th><th>Violating Rules</th></tr></thead><tbody>");
-        }
+            for (Path f : files) {
+                Results r;
+                try {
+                    r = mapper.readValue(Files.readAllBytes(f), Results.class);
+                } catch (IOException e) {
+                    body.append("<tr><td colspan='2' style='color:#b00'>Failed to read ")
+                        .append(escape(f.getFileName().toString()))
+                        .append(": ").append(escape(e.getMessage())).append("</td></tr>");
+                    continue;
+                }
+                List<Rule> violations = r.getViolations();
+                int count = (violations == null ? 0 : violations.size());
+                totalViolations += count;
 
-        Map<String,Integer> impactCounts = new LinkedHashMap<>();
-        List<String> detailsSections = new ArrayList<>();
+                String page = f.getFileName().toString().replace(".json","");
+                body.append("<tr><td>").append(escape(page)).append("</td><td>")
+                    .append(count).append("</td></tr>");
 
-        for (Path f : files) {
-            Results r;
-            try {
-                r = mapper.readValue(Files.readAllBytes(f), Results.class);
-            } catch (IOException e) {
-                body.append("<p style='color:#b00'>Failed to read ")
-                    .append(escape(f.getFileName().toString()))
-                    .append(": ").append(escape(e.getMessage())).append("</p>");
-                continue;
-            }
-            List<Rule> violations = r.getViolations();
-            int count = (violations == null ? 0 : violations.size());
-            totalViolations += count;
+                if (violations != null) {
+                    for (Rule rule : violations) {
+                        String impact = rule.getImpact() == null ? "unknown" : rule.getImpact();
+                        impactCounts.merge(impact, 1, Integer::sum);
 
-            String page = f.getFileName().toString().replace(".json","");
-            body.append("<tr><td>").append(escape(page)).append("</td><td>")
-                .append(count).append("</td></tr>");
-
-            if (violations != null) {
-                for (Rule rule : violations) {
-                    String impact = rule.getImpact() == null ? "unknown" : rule.getImpact();
-                    impactCounts.merge(impact, 1, Integer::sum);
-
-                    StringBuilder sec = new StringBuilder();
-                    sec.append("<h3>").append(escape(page)).append(" — ")
-                       .append(escape(rule.getId())).append(" (")
-                       .append(escape(impact)).append(")</h3>");
-                    sec.append("<p>").append(escape(rule.getDescription())).append("</p>");
-                    if (rule.getHelpUrl() != null) {
-                        sec.append("<p><a href=\"").append(escape(rule.getHelpUrl()))
-                           .append("\">").append(escape(rule.getHelpUrl())).append("</a></p>");
+                        StringBuilder sec = new StringBuilder();
+                        sec.append("<h3>").append(escape(page)).append(" — ")
+                           .append(escape(rule.getId())).append(" (")
+                           .append(escape(impact)).append(")</h3>");
+                        sec.append("<p>").append(escape(rule.getDescription())).append("</p>");
+                        if (rule.getHelpUrl() != null) {
+                            sec.append("<p><a href=\"").append(escape(rule.getHelpUrl()))
+                               .append("\">").append(escape(rule.getHelpUrl())).append("</a></p>");
+                        }
+                        if (rule.getNodes() != null && !rule.getNodes().isEmpty()) {
+                            sec.append("<details><summary>Affected elements (")
+                               .append(rule.getNodes().size()).append(")</summary><ul>");
+                            rule.getNodes().forEach(n -> {
+                                String target = n.getTarget() == null ? "" : n.getTarget().toString();
+                                String html = n.getHtml() == null ? "" : n.getHtml();
+                                sec.append("<li><code>").append(escape(target)).append("</code><br>")
+                                   .append("<pre>").append(escape(snippet(html, 500))).append("</pre></li>");
+                            });
+                            sec.append("</ul></details>");
+                        }
+                        detailsSections.add(sec.toString());
                     }
-                    if (rule.getNodes() != null && !rule.getNodes().isEmpty()) {
-                        sec.append("<details><summary>Affected elements (")
-                           .append(rule.getNodes().size()).append(")</summary><ul>");
-                        rule.getNodes().forEach(n -> {
-                            String target = n.getTarget() == null ? "" : n.getTarget().toString();
-                            String html = n.getHtml() == null ? "" : n.getHtml();
-                            sec.append("<li><code>").append(escape(target)).append("</code><br>")
-                               .append("<pre>").append(escape(snippet(html, 500))).append("</pre></li>");
-                        });
-                        sec.append("</ul></details>");
-                    }
-                    detailsSections.add(sec.toString());
                 }
             }
-        }
-
-        if (!files.isEmpty()) {
             body.append("</tbody></table>");
+
             body.append("<h2>Violations by Impact</h2><ul>");
             if (impactCounts.isEmpty()) {
                 body.append("<li>None</li>");
@@ -101,11 +98,13 @@ public class AxeHtmlReporter {
                 }
             }
             body.append("</ul>");
+
             body.append("<h2>Details</h2>");
             detailsSections.forEach(body::append);
         }
 
-        String html = """
+        // HTML template WITHOUT % formatting
+        String template = """
             <!doctype html>
             <html lang="en">
             <head>
@@ -121,9 +120,13 @@ public class AxeHtmlReporter {
                 details{margin:8px 0}
               </style>
             </head>
-            <body>%s</body>
+            <body>
+            {{BODY}}
+            </body>
             </html>
-            """.formatted(body.toString());
+            """;
+
+        String html = template.replace("{{BODY}}", body.toString());
 
         Path index = dir.resolve("index.html");
         Files.writeString(index, html, StandardCharsets.UTF_8,
