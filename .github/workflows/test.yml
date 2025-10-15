@@ -27,22 +27,59 @@ jobs:
           CI: true
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-        run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
-        # If you must run a specific runner class, use instead:
-        # run: mvn -q test -Dtest=cucumberTest.Runner -Dcucumber.filter.tags="${{ matrix.tags }}"
+        run: mvn -q verify -Dcucumber.filter.tags="${{ matrix.tags }}"
+        # ^ use 'verify' so the reporter can also run if you ever bind it here
 
-      # Upload per-tag reports (use unique artifact names to avoid 409 conflicts)
-      - name: Upload axe HTML report
+      - name: Upload axe JSON (per tag)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-report-${{ matrix.tags }}
-          path: target/axe/index.html
+          name: axe-json-${{ matrix.tags }}
+          path: target/axe/*.json
           if-no-files-found: warn
 
-      - name: Accessibility summary
-        if: always()
+  aggregate-report:
+    needs: run-by-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download all JSONs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: axe-json-*
+          path: merged-axe
+          merge-multiple: true
+
+      - name: List merged files
+        run: ls -al merged-axe || true
+
+      - name: Generate combined HTML
         run: |
-          echo "## Accessibility Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Report: target/axe/index.html (uploaded as artifact: axe-report-${{ matrix.tags }})" >> "$GITHUB_STEP_SUMMARY"
-          echo "- JSON count: $(ls -1 target/axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p target/axe
+          # compile the reporter (uses test sources on the classpath)
+          mvn -q -DskipTests=false -Dtest=!Dummy test-compile
+          # run reporter pointing at merged JSON dir
+          mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
+            -Dexec.mainClass=com.automationCalculator.accessibility.AxeHtmlReporter \
+            -Dexec.classpathScope=test \
+            -Dexec.arguments="merged-axe"
+
+      - name: Upload combined HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-report-all
+          path: merged-axe/index.html
+          if-no-files-found: error
+
+      - name: Summary
+        run: |
+          echo "## Accessibility Summary (Combined)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Combined report artifact: axe-report-all" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Files merged: $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
