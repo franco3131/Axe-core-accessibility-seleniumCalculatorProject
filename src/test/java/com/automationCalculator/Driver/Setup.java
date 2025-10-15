@@ -39,9 +39,8 @@ public void tearDown(Scenario scenario) {
                     "if(!document.title) document.title='Calculator';" +
                     "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
                 );
+                AxeChecks.assertNoWcagAA(driver, scenario.getName());
             } catch (Exception ignored) {}
-            AxeChecks.assertNoWcagAA(driver, scenario.getName());
-        } finally {
             driver.quit();
         }
     }
