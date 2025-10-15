@@ -29,27 +29,22 @@ public class Setup {
     }
 
     // Run axe after each scenario; use @After("@accessibility") to limit to tagged scenarios
-    @After
-    public void tearDown(Scenario scenario) {
-        if (driver != null) {
+@After
+public void tearDown(Scenario scenario) {
+    if (driver != null) {
+        try {
             try {
-                // Optional: patch missing <title> and <html lang> so those rules don’t always fail
-                try {
-                    JavascriptExecutor js = (JavascriptExecutor) driver;
-                    js.executeScript(
-                        "if(!document.title) document.title='Calculator';" +
-                        "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
-                    );
-                } catch (Exception ignored) {}
-
-                // Run axe and name the file with the scenario name (not the page title)
-                AxeChecks.assertNoWcagAA(driver, scenario.getName());
-            } catch (AssertionError ae) {
-                // Re-throw so the test still fails after writing JSON
-                throw ae;
-            } finally {
-                driver.quit();
-            }
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                js.executeScript(
+                    "if(!document.title) document.title='Calculator';" +
+                    "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
+                );
+            } catch (Exception ignored) {}
+            AxeChecks.assertNoWcagAA(driver, scenario.getName());
+        } finally {
+            driver.quit();
         }
     }
+}
+
 }
