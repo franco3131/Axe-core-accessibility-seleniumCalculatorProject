@@ -22,7 +22,8 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-
+      - name: Clean axe dir
+        run: rm -rf target/axe && mkdir -p target/axe
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
