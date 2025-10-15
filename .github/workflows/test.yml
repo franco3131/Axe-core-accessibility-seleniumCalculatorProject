@@ -36,7 +36,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-report
+          name: axe-report-${{ matrix.tags }}   # <- unique per tag
           path: target/axe/index.html
           if-no-files-found: warn
     
