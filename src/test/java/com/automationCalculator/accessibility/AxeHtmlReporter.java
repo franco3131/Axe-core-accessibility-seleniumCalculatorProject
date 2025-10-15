@@ -15,18 +15,13 @@ public class AxeHtmlReporter {
 
     public static void main(String[] args) throws Exception {
         Path dir = args.length > 0 ? Path.of(args[0]) : Path.of("target", "axe");
-        if (!Files.isDirectory(dir)) {
-            System.out.println("[axe] No reports at " + dir.toAbsolutePath());
-            return;
-        }
+        Files.createDirectories(dir);
 
         List<Path> files;
         try (var s = Files.list(dir)) {
-            files = s.filter(p -> p.toString().endsWith(".json")).sorted().collect(Collectors.toList());
-        }
-        if (files.isEmpty()) {
-            System.out.println("[axe] No *.json files in " + dir.toAbsolutePath());
-            return;
+            files = s.filter(p -> p.toString().endsWith(".json"))
+                     .sorted()
+                     .collect(Collectors.toList());
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -34,10 +29,16 @@ public class AxeHtmlReporter {
         StringBuilder body = new StringBuilder();
         body.append("<h1>Axe Accessibility Report</h1>");
         body.append("<p>Generated: ").append(LocalDateTime.now()).append("</p>");
-        body.append("<table><thead><tr><th>Page</th><th>Violating Rules</th></tr></thead><tbody>");
 
-        Map<String,Integer> impactCounts = new LinkedHashMap<>(); // minor, moderate, serious, critical
+        if (files.isEmpty()) {
+            body.append("<p><em>No axe JSON files found in ")
+                .append(escape(dir.toAbsolutePath().toString()))
+                .append("</em></p>");
+        } else {
+            body.append("<table><thead><tr><th>Page</th><th>Violating Rules</th></tr></thead><tbody>");
+        }
 
+        Map<String,Integer> impactCounts = new LinkedHashMap<>();
         List<String> detailsSections = new ArrayList<>();
 
         for (Path f : files) {
@@ -45,14 +46,16 @@ public class AxeHtmlReporter {
             try {
                 r = mapper.readValue(Files.readAllBytes(f), Results.class);
             } catch (IOException e) {
-                System.err.println("[axe] Failed to read " + f + ": " + e.getMessage());
+                body.append("<p style='color:#b00'>Failed to read ")
+                    .append(escape(f.getFileName().toString()))
+                    .append(": ").append(escape(e.getMessage())).append("</p>");
                 continue;
             }
             List<Rule> violations = r.getViolations();
-            totalViolations += (violations == null ? 0 : violations.size());
+            int count = (violations == null ? 0 : violations.size());
+            totalViolations += count;
 
             String page = f.getFileName().toString().replace(".json","");
-            int count = violations == null ? 0 : violations.size();
             body.append("<tr><td>").append(escape(page)).append("</td><td>")
                 .append(count).append("</td></tr>");
 
@@ -85,18 +88,22 @@ public class AxeHtmlReporter {
                 }
             }
         }
-        body.append("</tbody></table>");
 
-        // Overview by impact
-        body.append("<h2>Violations by Impact</h2><ul>");
-        for (var e : impactCounts.entrySet()) {
-            body.append("<li>").append(escape(e.getKey())).append(": ").append(e.getValue()).append("</li>");
+        if (!files.isEmpty()) {
+            body.append("</tbody></table>");
+            body.append("<h2>Violations by Impact</h2><ul>");
+            if (impactCounts.isEmpty()) {
+                body.append("<li>None</li>");
+            } else {
+                for (var e : impactCounts.entrySet()) {
+                    body.append("<li>").append(escape(e.getKey()))
+                        .append(": ").append(e.getValue()).append("</li>");
+                }
+            }
+            body.append("</ul>");
+            body.append("<h2>Details</h2>");
+            detailsSections.forEach(body::append);
         }
-        body.append("</ul>");
-
-        // Details
-        body.append("<h2>Details</h2>");
-        detailsSections.forEach(body::append);
 
         String html = """
             <!doctype html>
@@ -110,7 +117,7 @@ public class AxeHtmlReporter {
                 th,td{border:1px solid #ddd;padding:8px}
                 th{background:#f5f5f5;text-align:left}
                 code{background:#f0f0f0;padding:2px 4px;border-radius:4px}
-                pre{background:#f8f8f8;padding:8px;border-radius:6px;overflow:auto}
+                pre{background:#f8f8f8;padding:8px;border-radius:6px;overflow:auto;max-height:220px}
                 details{margin:8px 0}
               </style>
             </head>
@@ -119,8 +126,8 @@ public class AxeHtmlReporter {
             """.formatted(body.toString());
 
         Path index = dir.resolve("index.html");
-        Files.createDirectories(dir);
-        Files.writeString(index, html, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.writeString(index, html, StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
         System.out.println("[axe] Wrote HTML report: " + index.toAbsolutePath());
         System.out.println("[axe] Total violating rules: " + totalViolations);
