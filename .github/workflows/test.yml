@@ -3,7 +3,7 @@ name: cucumber-tags
 on:
   push:
   pull_request:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   run-by-tag:
@@ -28,21 +28,21 @@ jobs:
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
-
-        # If you must run a specific runner class, use:
+        # If you must run a specific runner class, use instead:
         # run: mvn -q test -Dtest=cucumberTest.Runner -Dcucumber.filter.tags="${{ matrix.tags }}"
 
+      # Upload per-tag reports (use unique artifact names to avoid 409 conflicts)
       - name: Upload axe HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-report-${{ matrix.tags }}   # <- unique per tag
+          name: axe-report-${{ matrix.tags }}
           path: target/axe/index.html
           if-no-files-found: warn
-    
+
       - name: Accessibility summary
         if: always()
         run: |
-          echo "## Accessibility Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Report: target/axe/index.html (uploaded as artifact)" >> $GITHUB_STEP_SUMMARY
-          echo "- JSON count: $(ls -1 target/axe/*.json 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "## Accessibility Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Report: target/axe/index.html (uploaded as artifact: axe-report-${{ matrix.tags }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- JSON count: $(ls -1 target/axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
