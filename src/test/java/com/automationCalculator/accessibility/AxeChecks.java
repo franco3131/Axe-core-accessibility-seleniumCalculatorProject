@@ -1,3 +1,4 @@
+// src/test/java/com/automationCalculator/accessibility/AxeChecks.java
 package com.automationCalculator.accessibility;
 
 import com.deque.html.axecore.results.Results;
@@ -16,43 +17,39 @@ import java.util.stream.Collectors;
 
 public class AxeChecks {
 
-    /**
-     * Runs axe on the current page, writes a pretty JSON report under target/axe/,
-     * then fails if there are violations (configurable via env).
-     *
-     * Env toggles (optional):
-     *  - AXE_SKIP_RULES: comma-separated rule ids to ignore (e.g. "document-title,html-has-lang")
-     *  - AXE_MIN_IMPACT: minimum impact to fail on: minor|moderate|serious|critical (default: minor)
-     */
-    public static void assertNoWcagAA(WebDriver driver, String pageName) {
-        // Run axe with WCAG A/AA tags (change to wcag21a/wcag21aa if you prefer)
+    public static void assertNoWcagAA(WebDriver driver, String pageOrScenarioName) {
         Results results = new AxeBuilder()
                 .withTags(java.util.List.of("wcag2a", "wcag2aa"))
                 .analyze(driver);
 
-        // ---------- ALWAYS WRITE JSON FIRST ----------
-        String base = (pageName == null ? "" : pageName.trim());
-        if (base.isEmpty()) base = "page";                       // fallback when title is empty
+        // ---------- WRITE JSON FIRST ----------
+        String base = pageOrScenarioName == null ? "" : pageOrScenarioName.trim();
+        if (base.isEmpty()) base = "page";
         String safe = base.replaceAll("\\W+", "_");
         if (safe.isEmpty()) safe = "page";
-        String fileName = safe + "-" + System.currentTimeMillis() + ".json";
 
+        // avoid overwriting: add -1, -2, … if needed (no timestamp)
+        Path dir = Path.of("target", "axe");
+        Path out = dir.resolve(safe + ".json");
+        int i = 1;
         try {
-            Path out = Path.of("target", "axe", fileName);
-            Files.createDirectories(out.getParent());
-            ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+            Files.createDirectories(dir);
+            while (Files.exists(out)) {
+                out = dir.resolve(safe + "-" + i + ".json");
+                i++;
+            }
+            var mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
             mapper.writeValue(out.toFile(), results);
             System.out.println("[axe] wrote report: " + out.toAbsolutePath());
         } catch (Exception e) {
             System.err.println("[axe] failed to write JSON report: " + e.getMessage());
         }
-        // --------------------------------------------
+        // -------------------------------------
 
-        // Gather violations (can be null on some versions)
+        // Optional filtering via env vars
         List<Rule> violations = results.getViolations();
         if (violations == null) violations = List.of();
 
-        // Optional filtering via environment (defaults keep all)
         Set<String> skipRules = readSkipRulesFromEnv();
         Set<String> failImpacts = readFailImpactsFromEnv();
 
@@ -76,14 +73,11 @@ public class AxeChecks {
     private static Set<String> readSkipRulesFromEnv() {
         String raw = System.getenv().getOrDefault("AXE_SKIP_RULES", "").trim();
         if (raw.isEmpty()) return Set.of();
-        return Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
+        return Arrays.stream(raw.split(",")).map(String::trim).filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
     }
 
     private static Set<String> readFailImpactsFromEnv() {
-        // default: "minor" => fail on all impacts (minor..critical)
         String min = System.getenv().getOrDefault("AXE_MIN_IMPACT", "minor").trim().toLowerCase();
         switch (min) {
             case "critical": return Set.of("critical");
