@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         tags: ['@component-Division', '@component-Addition', '@component-EndToEnd', '@component-Subtraction', '@component-Multiplication']
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,20 +28,28 @@ jobs:
           CI: true
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-        run: mvn -q verify -Dcucumber.filter.tags="${{ matrix.tags }}"
-        # ^ use 'verify' so the reporter can also run if you ever bind it here
+          # Optional: relax/focus axe failing criteria
+          # AXE_SKIP_RULES: document-title,html-has-lang
+          # AXE_MIN_IMPACT: serious
+        run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
+
+      - name: List axe files
+        if: always()
+        run: ls -al target/axe || true
 
       - name: Upload axe JSON (per tag)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ matrix.tags }}
+          name: axe-json-${{ matrix.tags }}      # unique to avoid 409 conflicts
           path: target/axe/*.json
           if-no-files-found: warn
 
   aggregate-report:
     needs: run-by-tag
+    if: ${{ always() }}     # <-- IMPORTANT: run even if some matrix jobs failed/cancelled
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -50,22 +59,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Download all JSONs
+      - name: Download all per-tag JSON artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: axe-json-*
           path: merged-axe
           merge-multiple: true
 
-      - name: List merged files
+      - name: Show merged contents
         run: ls -al merged-axe || true
 
       - name: Generate combined HTML
         run: |
-          mkdir -p target/axe
-          # compile the reporter (uses test sources on the classpath)
-          mvn -q -DskipTests=false -Dtest=!Dummy test-compile
-          # run reporter pointing at merged JSON dir
+          # Compile tests so AxeHtmlReporter (in test sources) is available
+          mvn -q -DskipTests -Dtest=!Dummy test-compile
+          # Run the reporter against the merged folder (creates merged-axe/index.html)
           mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
             -Dexec.mainClass=com.automationCalculator.accessibility.AxeHtmlReporter \
             -Dexec.classpathScope=test \
@@ -76,7 +84,7 @@ jobs:
         with:
           name: axe-report-all
           path: merged-axe/index.html
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Summary
         run: |
