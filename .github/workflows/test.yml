@@ -22,14 +22,17 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+
       - name: Clean axe dir
         run: rm -rf target/axe && mkdir -p target/axe
+
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
+          # Quiet Apache HttpClient wire spam (matches your POM config)
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-          # Optional: relax/focus axe failing criteria
+          # Optional: relax/adjust axe failing criteria via env (handled in AxeChecks)
           # AXE_SKIP_RULES: document-title,html-has-lang
           # AXE_MIN_IMPACT: serious
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
@@ -42,13 +45,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ matrix.tags }}      # unique to avoid 409 conflicts
+          name: axe-json-${{ matrix.tags }}      # unique per tag to avoid 409 conflicts
           path: target/axe/*.json
           if-no-files-found: warn
 
   aggregate-report:
     needs: run-by-tag
-    if: ${{ always() }}     # <-- IMPORTANT: run even if some matrix jobs failed/cancelled
+    if: ${{ always() }}             # <-- run even if some matrix jobs failed/cancelled
     runs-on: ubuntu-latest
 
     steps:
@@ -70,25 +73,28 @@ jobs:
       - name: Show merged contents
         run: ls -al merged-axe || true
 
-      - name: Generate combined HTML
+      # Compile test sources so AxeFailOnlyReporter (in test scope) is on classpath
+      - name: Compile test classes
+        run: mvn -q -DskipTests -Dtest=!Dummy test-compile
+
+      # Generate fail-only HTML (requires AxeFailOnlyReporter.java in test sources)
+      - name: Generate fail-only accessibility report
         run: |
-          # Compile tests so AxeHtmlReporter (in test sources) is available
-          mvn -q -DskipTests -Dtest=!Dummy test-compile
-          # Run the reporter against the merged folder (creates merged-axe/index.html)
+          mkdir -p merged-axe
           mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
-            -Dexec.mainClass=com.automationCalculator.accessibility.AxeHtmlReporter \
+            -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailOnlyReporter \
             -Dexec.classpathScope=test \
             -Dexec.arguments="merged-axe"
 
-      - name: Upload combined HTML
+      - name: Upload accessibility failures (combined)
         uses: actions/upload-artifact@v4
         with:
-          name: axe-report-all
-          path: merged-axe/index.html
+          name: axe-failures
+          path: merged-axe/failures.html
           if-no-files-found: warn
 
       - name: Summary
         run: |
-          echo "## Accessibility Summary (Combined)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Combined report artifact: axe-report-all" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Files merged: $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Accessibility Failures (Combined)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact: **axe-failures** (failures.html)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- JSON files merged: $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
