@@ -85,14 +85,13 @@ jobs:
             -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailOnlyReporter \
             -Dexec.classpathScope=test \
             -Dexec.arguments="merged-axe"
-
+      
       - name: Upload accessibility failures (combined)
         uses: actions/upload-artifact@v4
         with:
           name: axe-failures
           path: merged-axe/failures.html
           if-no-files-found: warn
-
       - name: Summary
         run: |
           echo "## Accessibility Failures (Combined)" >> "$GITHUB_STEP_SUMMARY"
