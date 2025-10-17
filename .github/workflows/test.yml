@@ -36,7 +36,7 @@ jobs:
           CI: true
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-          # Optional demo to force some failures:
+          # To force visible failures during debugging, you can set:
           # AXE_SKIP_RULES: ""
           # AXE_MIN_IMPACT: minor
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
@@ -49,18 +49,18 @@ jobs:
           echo "FAIL count: $(ls -1 target/axe/FAIL-*.json 2>/dev/null | wc -l)"
           echo "ALL  count:  $(ls -1 target/axe/*.json 2>/dev/null | wc -l)"
 
-      # Sanitize artifact name so pattern matching is stable
+      # NOTE: nested replace() instead of pipes to sanitize artifact name
       - name: Upload axe JSON (per tag)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ join(matrix.tags, '') | replace('@','at-') | replace(' ', '_') }}
+          name: axe-json-${{ replace(replace(matrix.tags, '@', 'at-'), ' ', '_') }}
           path: target/axe/*.json
           if-no-files-found: warn
 
   aggregate-report:
     needs: run-by-tag
-    if: ${{ always() }}      # must run even if matrix failed
+    if: ${{ always() }}   # run even if matrix failed
     runs-on: ubuntu-latest
 
     steps:
@@ -71,14 +71,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Show list of available artifacts (debug)
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts-list
-          pattern: "*"         # download just the manifests
-          merge-multiple: false
-        continue-on-error: true
 
       - name: Download all per-tag JSON artifacts
         uses: actions/download-artifact@v4
@@ -91,19 +83,16 @@ jobs:
         run: |
           echo "== CONSUMER merged-axe =="
           ls -al merged-axe || true
-          echo "Merged FAIL count: $(ls -1 merged-axe/FAIL-*.json 2>/dev/null | wc -l)"
           echo "Merged ALL  count:  $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)"
-          # Hard fail if nothing was downloaded (prevents confusing empty report)
           if [ "$(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
-            echo "::error::No JSON artifacts found in merged-axe. Ensure you rerun the WHOLE workflow (not just this job) and that producer jobs uploaded files."
+            echo "::error::No JSON artifacts found in merged-axe. Re-run the WHOLE workflow so producer jobs upload artifacts."
             exit 1
           fi
 
-      # Compile tests so reporter class is on the classpath
-      - name: Compile test classes
+      - name: Compile test classes (for reporter)
         run: mvn -q -DskipTests -Dtest=!Dummy test-compile
 
-      # Fail-only report derived from full JSONs (works even if no FAIL-*.json)
+      # Uses the "AxeFailuresFromFullReporter" that reads full JSONs and outputs only failures
       - name: Generate fail-only accessibility report
         env:
           AXE_SKIP_RULES: ${{ env.AXE_SKIP_RULES }}
@@ -117,4 +106,6 @@ jobs:
       - name: Upload accessibility failures (combined)
         uses: actions/upload-artifact@v4
         with:
-          na
+          name: axe-failures
+          path: merged-axe/failures.html
+          if-no-files-found: warn
