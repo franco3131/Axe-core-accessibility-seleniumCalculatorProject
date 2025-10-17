@@ -36,7 +36,7 @@ jobs:
           CI: true
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-          # To force visible failures during debugging, you can set:
+          # For debugging you can force failures:
           # AXE_SKIP_RULES: ""
           # AXE_MIN_IMPACT: minor
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
@@ -49,12 +49,22 @@ jobs:
           echo "FAIL count: $(ls -1 target/axe/FAIL-*.json 2>/dev/null | wc -l)"
           echo "ALL  count:  $(ls -1 target/axe/*.json 2>/dev/null | wc -l)"
 
-      # NOTE: nested replace() instead of pipes to sanitize artifact name
+      # Compute a safe artifact name (no '@' or spaces)
+      - name: Compute artifact name
+        id: aname
+        if: always()
+        shell: bash
+        run: |
+          n="${{ matrix.tags }}"
+          n="${n//@/at-}"     # replace '@' with 'at-'
+          n="${n// /_}"       # replace spaces with underscores
+          echo "val=$n" >> "$GITHUB_OUTPUT"
+
       - name: Upload axe JSON (per tag)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ replace(replace(matrix.tags, '@', 'at-'), ' ', '_') }}
+          name: axe-json-${{ steps.aname.outputs.val }}
           path: target/axe/*.json
           if-no-files-found: warn
 
@@ -92,7 +102,7 @@ jobs:
       - name: Compile test classes (for reporter)
         run: mvn -q -DskipTests -Dtest=!Dummy test-compile
 
-      # Uses the "AxeFailuresFromFullReporter" that reads full JSONs and outputs only failures
+      # Uses AxeFailuresFromFullReporter (reads full JSONs and outputs only failures)
       - name: Generate fail-only accessibility report
         env:
           AXE_SKIP_RULES: ${{ env.AXE_SKIP_RULES }}
@@ -107,5 +117,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: axe-failures
-          path: merged-axe/failures.html
-          if-no-files-found: warn
+          path: merged-a
