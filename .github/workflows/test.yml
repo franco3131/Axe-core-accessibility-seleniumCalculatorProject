@@ -73,7 +73,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-
+      - name: Count violations per JSON (debug)
+        run: |
+          for f in merged-axe/*.json; do
+            echo -n "$(basename "$f"): "
+            # crude count: number of `"violations"` array entries
+            grep -o '"violations"' "$f" >/dev/null || true
+            # better: count objects inside violations (works because axe output is pretty stable)
+            vcount=$(awk '/"violations"\s*:/,/\]/{print}' "$f" | grep -o '{' | wc -l | xargs)
+            echo "violations=$vcount"
+          done
       # Pull all JSONs into one flat folder
       - name: Download all per-tag JSON artifacts
         uses: actions/download-artifact@v4
