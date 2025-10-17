@@ -5,57 +5,40 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.*;
 
 public class Setup {
-    public static WebDriver driver;
+  public static WebDriver driver;
 
-    // guard to ensure axe runs once per scenario (in case multiple @After hooks exist)
-    private static final ThreadLocal<Boolean> axeRan = ThreadLocal.withInitial(() -> false);
-
-    @Before(order = 0)
-    public void setup() {
-        WebDriverManager.chromedriver().setup();
-
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
-        if ("true".equalsIgnoreCase(System.getenv("CI"))) {
-            options.addArguments("--window-size=1920,1080");
-        }
-        driver = new ChromeDriver(options);
-
-        // reset guard at scenario start
-        axeRan.set(false);
+  @Before(order = 0)
+  public void startBrowser() {
+    WebDriverManager.chromedriver().setup();
+    ChromeOptions opts = new ChromeOptions();
+    opts.addArguments("--headless=new","--no-sandbox","--disable-dev-shm-usage");
+    if ("true".equalsIgnoreCase(System.getenv("CI"))) {
+      opts.addArguments("--window-size=1920,1080");
     }
+    driver = new ChromeDriver(opts);
+  }
 
-    @After(order = 1000) // run late so the page is in its final state
-    public void tearDown(Scenario scenario) {
-        try {
-            if (driver != null && !axeRan.get()) {
-                axeRan.set(true);
+  // run as late as possible so it fires after other @After hooks
+  @After(order = 1000)
+  public void runAxeAndQuit(Scenario scenario) {
+    if (driver == null) return;
+    try {
+      // (optional) patch trivial issues
+      try {
+        ((JavascriptExecutor) driver).executeScript(
+          "if(!document.title) document.title='Calculator';" +
+          "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
+        );
+      } catch (Exception ignored) {}
 
-                // Patch missing <title> / <html lang> to avoid trivial fails on static pages
-                try {
-                    JavascriptExecutor js = (JavascriptExecutor) driver;
-                    js.executeScript(
-                        "if(!document.title) document.title='Calculator';" +
-                        "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
-                    );
-                } catch (Exception ignored) { /* non-fatal */ }
-
-                // Run axe and name artifacts after the scenario
-                AxeChecks.assertNoWcagAA(driver, scenario.getName());
-            }
-        } finally {
-            axeRan.remove();
-            if (driver != null) {
-                try { driver.quit(); } catch (Exception ignored) {}
-                driver = null;
-            }
-        }
+      // IMPORTANT: axe first, then quit
+      AxeChecks.assertNoWcagAA(driver, scenario.getName());
+    } finally {
+      try { driver.quit(); } catch (Exception ignored) {}
+      driver = null;
     }
+  }
 }
-
