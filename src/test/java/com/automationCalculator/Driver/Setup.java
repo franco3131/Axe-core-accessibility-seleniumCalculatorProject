@@ -32,14 +32,16 @@ public class Setup {
     try {
       // (optional) patch trivial issues
       try {
+        System.out.println("hello1");
         ((JavascriptExecutor) driver).executeScript(
           "if(!document.title) document.title='Calculator';" +
           "if(!document.documentElement.getAttribute('lang')) document.documentElement.setAttribute('lang','en');"
         );
       } catch (Exception ignored) {}
-
+        System.out.println("hello2");
       // IMPORTANT: axe first, then quit
       AxeChecks.assertNoWcagAA(driver, scenario.getName());
+              System.out.println("hello3");
     } finally {
       try { driver.quit(); } catch (Exception ignored) {}
       driver = null;
