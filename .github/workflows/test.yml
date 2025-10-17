@@ -28,41 +28,39 @@ jobs:
           java-version: '17'
           cache: maven
 
-      # Start clean so old reports don't get merged in
       - name: Clean axe dir
         run: rm -rf target/axe && mkdir -p target/axe
 
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
-          # Uncomment to relax/tighten failure criteria controlled in AxeChecks
-          # AXE_SKIP_RULES: document-title,html-has-lang
-          # AXE_MIN_IMPACT: serious
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
+          # Optional demo to force some failures:
+          # AXE_SKIP_RULES: ""
+          # AXE_MIN_IMPACT: minor
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
 
-      # See exactly what was generated
-      - name: List axe files
+      - name: List axe files (producer)
         if: always()
         run: |
-          echo "== target/axe =="
+          echo "== PRODUCER target/axe =="
           ls -al target/axe || true
           echo "FAIL count: $(ls -1 target/axe/FAIL-*.json 2>/dev/null | wc -l)"
           echo "ALL  count:  $(ls -1 target/axe/*.json 2>/dev/null | wc -l)"
 
-      # Upload per-tag JSONs (includes FAIL-*.json if any)
+      # Sanitize artifact name so pattern matching is stable
       - name: Upload axe JSON (per tag)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ matrix.tags }}   # unique per tag to avoid 409 conflicts
+          name: axe-json-${{ join(matrix.tags, '') | replace('@','at-') | replace(' ', '_') }}
           path: target/axe/*.json
           if-no-files-found: warn
 
   aggregate-report:
     needs: run-by-tag
-    if: ${{ always() }}        # <-- run even if some matrix jobs failed
+    if: ${{ always() }}      # must run even if matrix failed
     runs-on: ubuntu-latest
 
     steps:
@@ -73,17 +71,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Count violations per JSON (debug)
-        run: |
-          for f in merged-axe/*.json; do
-            echo -n "$(basename "$f"): "
-            # crude count: number of `"violations"` array entries
-            grep -o '"violations"' "$f" >/dev/null || true
-            # better: count objects inside violations (works because axe output is pretty stable)
-            vcount=$(awk '/"violations"\s*:/,/\]/{print}' "$f" | grep -o '{' | wc -l | xargs)
-            echo "violations=$vcount"
-          done
-      # Pull all JSONs into one flat folder
+
+      - name: Show list of available artifacts (debug)
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-list
+          pattern: "*"         # download just the manifests
+          merge-multiple: false
+        continue-on-error: true
+
       - name: Download all per-tag JSON artifacts
         uses: actions/download-artifact@v4
         with:
@@ -91,25 +87,28 @@ jobs:
           path: merged-axe
           merge-multiple: true
 
-      - name: Show merged contents
+      - name: Show merged contents (consumer)
         run: |
-          echo "== merged-axe =="
+          echo "== CONSUMER merged-axe =="
           ls -al merged-axe || true
           echo "Merged FAIL count: $(ls -1 merged-axe/FAIL-*.json 2>/dev/null | wc -l)"
           echo "Merged ALL  count:  $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)"
+          # Hard fail if nothing was downloaded (prevents confusing empty report)
+          if [ "$(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
+            echo "::error::No JSON artifacts found in merged-axe. Ensure you rerun the WHOLE workflow (not just this job) and that producer jobs uploaded files."
+            exit 1
+          fi
 
-      # Compile tests so AxeFailOnlyReporter (in test sources) is on the classpath
+      # Compile tests so reporter class is on the classpath
       - name: Compile test classes
         run: mvn -q -DskipTests -Dtest=!Dummy test-compile
 
-      # Generate fail-only HTML from FAIL-*.json in merged-axe
-      - name: Generate fail-only accessibility report (from full JSONs)
+      # Fail-only report derived from full JSONs (works even if no FAIL-*.json)
+      - name: Generate fail-only accessibility report
         env:
-          # Use the same filters the tests used (optional)
           AXE_SKIP_RULES: ${{ env.AXE_SKIP_RULES }}
           AXE_MIN_IMPACT: ${{ env.AXE_MIN_IMPACT }}
         run: |
-          mkdir -p merged-axe
           mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
             -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailuresFromFullReporter \
             -Dexec.classpathScope=test \
@@ -118,13 +117,4 @@ jobs:
       - name: Upload accessibility failures (combined)
         uses: actions/upload-artifact@v4
         with:
-          name: axe-failures
-          path: merged-axe/failures.html
-          if-no-files-found: warn
-
-      - name: Summary
-        run: |
-          echo "## Accessibility Failures (Combined)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Artifact: **axe-failures** (failures.html)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- JSON files merged: $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- FAIL files merged: $(ls -1 merged-axe/FAIL-*.json 2>/dev/null | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+          na
