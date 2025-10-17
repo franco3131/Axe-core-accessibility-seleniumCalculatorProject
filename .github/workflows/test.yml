@@ -94,11 +94,15 @@ jobs:
         run: mvn -q -DskipTests -Dtest=!Dummy test-compile
 
       # Generate fail-only HTML from FAIL-*.json in merged-axe
-      - name: Generate fail-only accessibility report
+      - name: Generate fail-only accessibility report (from full JSONs)
+        env:
+          # Use the same filters the tests used (optional)
+          AXE_SKIP_RULES: ${{ env.AXE_SKIP_RULES }}
+          AXE_MIN_IMPACT: ${{ env.AXE_MIN_IMPACT }}
         run: |
           mkdir -p merged-axe
           mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
-            -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailOnlyReporter \
+            -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailuresFromFullReporter \
             -Dexec.classpathScope=test \
             -Dexec.arguments="merged-axe"
 
