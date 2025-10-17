@@ -1,5 +1,8 @@
 package com.automationCalculator.Driver;
 
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.chrome.ChromeDriver;     // 
 import com.automationCalculator.accessibility.AxeChecks;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
