@@ -117,4 +117,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: axe-failures
-          path: merged-a
+          path: merged-axe/failures.html
+          if-no-files-found: error
