@@ -1,9 +1,5 @@
 name: cucumber-axe
-
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   run-by-tag:
@@ -11,58 +7,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tags:
-          - '@component-Division'
-          - '@component-Addition'
-          - '@component-EndToEnd'
-          - '@component-Subtraction'
-          - '@component-Multiplication'
-
+        tags: ['@component-Division','@component-Addition','@component-EndToEnd','@component-Subtraction','@component-Multiplication']
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: maven
-
-      - name: Clean axe dir
-        run: rm -rf target/axe && mkdir -p target/axe
-
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17', cache: maven }
+      - run: rm -rf target/axe && mkdir -p target/axe
       - name: Build & test for ${{ matrix.tags }}
         env:
           CI: true
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP: warn
           ORG_SLF4J_SIMPLELOGGER_LOG_ORG_APACHE_HC_CLIENT5_HTTP_WIRE: off
-          # For debugging you can force failures:
           # AXE_SKIP_RULES: ""
           # AXE_MIN_IMPACT: minor
         run: mvn -q test -Dcucumber.filter.tags="${{ matrix.tags }}"
-
-      - name: List axe files (producer)
+      - name: List axe files
         if: always()
-        run: |
-          echo "== PRODUCER target/axe =="
-          ls -al target/axe || true
-          echo "FAIL count: $(ls -1 target/axe/FAIL-*.json 2>/dev/null | wc -l)"
-          echo "ALL  count:  $(ls -1 target/axe/*.json 2>/dev/null | wc -l)"
-
-      # Compute a safe artifact name (no '@' or spaces)
+        run: ls -al target/axe || true
       - name: Compute artifact name
         id: aname
         if: always()
         shell: bash
         run: |
-          n="${{ matrix.tags }}"
-          n="${n//@/at-}"     # replace '@' with 'at-'
-          n="${n// /_}"       # replace spaces with underscores
-          echo "val=$n" >> "$GITHUB_OUTPUT"
-
-      - name: Upload axe JSON (per tag)
+          n="${{ matrix.tags }}"; n="${n//@/at-}"; n="${n// /_}"; echo "val=$n" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: axe-json-${{ steps.aname.outputs.val }}
           path: target/axe/*.json
@@ -70,51 +39,28 @@ jobs:
 
   aggregate-report:
     needs: run-by-tag
-    if: ${{ always() }}   # run even if matrix failed
+    if: ${{ always() }}
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Download all per-tag JSON artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: axe-json-*
-          path: merged-axe
-          merge-multiple: true
-
-      - name: Show merged contents (consumer)
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: actions/download-artifact@v4
+        with: { pattern: axe-json-*, path: merged-axe, merge-multiple: true }
+      - name: Show merged contents
         run: |
-          echo "== CONSUMER merged-axe =="
           ls -al merged-axe || true
-          echo "Merged ALL  count:  $(ls -1 merged-axe/*.json 2>/dev/null | wc -l)"
           if [ "$(ls -1 merged-axe/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
-            echo "::error::No JSON artifacts found in merged-axe. Re-run the WHOLE workflow so producer jobs upload artifacts."
-            exit 1
-          fi
-
-      - name: Compile test classes (for reporter)
+            echo "::error::No JSON artifacts found in merged-axe"; exit 1; fi
+      - name: Compile reporter
         run: mvn -q -DskipTests -Dtest=!Dummy test-compile
-
-      # Uses AxeFailuresFromFullReporter (reads full JSONs and outputs only failures)
-      - name: Generate fail-only accessibility report
-        env:
-          AXE_SKIP_RULES: ${{ env.AXE_SKIP_RULES }}
-          AXE_MIN_IMPACT: ${{ env.AXE_MIN_IMPACT }}
+      - name: Generate fail-only report
         run: |
           mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
             -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailuresFromFullReporter \
             -Dexec.classpathScope=test \
             -Dexec.arguments="merged-axe"
-
-      - name: Upload accessibility failures (combined)
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: axe-failures
           path: merged-axe/failures.html
