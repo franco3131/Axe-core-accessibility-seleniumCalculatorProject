@@ -1,4 +1,4 @@
-// src/test/java/com/automationCalculator/Steps/AccessibilitySteps.java
+
 package com.automationCalculator.Steps;
 
 import com.automationCalculator.accessibility.AxeChecks;
@@ -16,11 +16,4 @@ public class AccessibilitySteps {
     AxeChecks.check(d, ScenarioMeta.label(), /*failOnViolation=*/true);
   }
 
-  // Optional: mid-scenario snapshots
-  @Then("capture accessibility snapshot labeled {string}")
-  public void captureSnapshotLabeled(String label) {
-    WebDriver d = driver;
-    String name = ScenarioMeta.label() + "__" + label.replaceAll("\\W+","_");
-    AxeChecks.check(d, name, /*failOnViolation=*/false);
-  }
 }
