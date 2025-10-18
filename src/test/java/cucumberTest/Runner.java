@@ -6,7 +6,7 @@ import io.cucumber.testng.CucumberOptions;
 
 @CucumberOptions(
   features = "src/test/resources/Features",
-  glue = {"com.automationCalculator.Steps","com.automationCalculator.Driver"},
+  glue = {"com.automationCalculator.Steps","com.automationCalculator.Driver","com.automationCalculator.support"},
   plugin = {"pretty","json:target/cucumber.json"},
   monochrome = true
 )
