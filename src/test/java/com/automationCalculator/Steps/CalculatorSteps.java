@@ -63,7 +63,6 @@ public class CalculatorSteps {
     @Then("The calculator outputs the decimal {double}")
     public void theCalculatorOutputsDecimal(double expected) throws Exception {
         double actual = Double.parseDouble(calculator.output().trim());
-        // delta 0.0 means exact; adjust (e.g., 1e-9) if your UI introduces rounding
         assertEquals(actual, expected, 0.0, "Decimal result mismatch");
     }
 }
