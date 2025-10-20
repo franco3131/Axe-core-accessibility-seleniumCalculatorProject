@@ -1,7 +1,7 @@
 ## Purpose
 The purpose of this project is to provide a lightweight way to catch accessibility issues for UI tests that are run for my calculator UI page. 
 It runs **axe-core** from a Cucumber step definition using **Selenium 4** (Page Object Model via **Page Factory**), 
-When each scenario runs, oit saves one JSON report, and produces a combined **fail-only HTML** report in **GitHub Actions**.  
+When each scenario runs, it saves one JSON report, and produces a combined **fail-only HTML** report in **GitHub Actions**.  
 
 This is the calculator page https://rawcdn.githack.com/franco3131/Wood-Calculator-Javascript/a1175acf8a268e506e2fd6b39dbb0a6156b6c29e/Calculator/HTML/calculator.html
 
