@@ -27,7 +27,6 @@ public class CalculatorPage extends BasePage {
 	public CalculatorPage() {
 		super();
 		PageFactory.initElements(this.driver, this);
-		// TODO Auto-generated constructor stub
 	}
 	
 	/**
