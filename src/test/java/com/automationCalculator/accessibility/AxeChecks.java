@@ -1,4 +1,4 @@
-// src/test/java/com/automationCalculator/accessibility/AxeChecks.java
+
 package com.automationCalculator.accessibility;
 
 import com.deque.html.axecore.results.Results;
