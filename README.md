@@ -50,19 +50,9 @@ Page Object Model (POM) with Selenium Page Factory
 
 GitHub Actions (matrix by Cucumber tag, aggregate report)
 
-# run tests (writes JSONs to target/axe/)
+# run tests for this project (writes JSONs to target/axe/)
 
-mvn test
-
-# build combined HTML from the JSONs you just produced
-```
-mvn -q -DskipTests -Dtest=\!Dummy test-compile
-mvn -q org.codehaus.mojo:exec-maven-plugin:3.3.0:java \
-  -Dexec.mainClass=com.automationCalculator.accessibility.AxeFailuresFromFullReporter \
-  -Dexec.classpathScope=test \
-  -Dexec.arguments="target/axe"
-# open target/axe/failures.html
-```
+Use the github actions to run the tests using the test.yml workflow 
 
 
 
