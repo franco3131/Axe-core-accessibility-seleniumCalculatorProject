@@ -17,7 +17,7 @@ Feature: Division
 		 |9		       |9        |1.0          |
 
   @component-Division  @priority-high @accessibility
-  Scenario Outline: Divide two numbers and check accessibility
+  Scenario: Divide two numbers and check accessibility
    Given I go to the calculator page
    And The calculator page is displayed
    And I click on button 3
