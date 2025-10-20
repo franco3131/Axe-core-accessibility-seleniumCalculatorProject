@@ -19,9 +19,6 @@ public class Setup {
     WebDriverManager.chromedriver().setup();
     ChromeOptions opts = new ChromeOptions();
     opts.addArguments("--headless=new","--no-sandbox","--disable-dev-shm-usage");
-    // if ("true".equalsIgnoreCase(System.getenv("CI"))) {
-    //   opts.addArguments("--window-size=1920,1080");
-    // }
     driver = new ChromeDriver(opts);
   }
 
