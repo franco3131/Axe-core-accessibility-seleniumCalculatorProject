@@ -18,8 +18,8 @@ Feature: Multiplication
 		 |9		       |1        |9.0            |
 
 
-  @component-Multiplication  @priority-high
-  Scenario Outline: Multiply two numbers and check accessibility
+  @component-Multiplication  @priority-high @accessibility
+  Scenario: Multiply two numbers and check accessibility
    Given I go to the calculator page
    And The calculator page is displayed
    And I click on button 5
